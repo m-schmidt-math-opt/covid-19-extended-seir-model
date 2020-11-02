@@ -9,7 +9,6 @@ class Visualizer:
         self.tracing_model_solved = tracing_model_solved
         self.N = N
         self.N_total = N_total
-        assert(self.N_total == sum(self.N))
         self.K = K
         self.beds = beds
         self.t_start = t_start
@@ -18,23 +17,35 @@ class Visualizer:
 
         # Sanity checks
         assert(self.t_start < self.t_end)
+        assert(self.N_total == sum(self.N))
 
-        # Prepare lists
+        # Prepare lists of simulation results
         self.t_vals = []
         self.S_vals = [[] for k in range(K)]
+        self.S_vals_aggr = []
         self.E_vals = [[] for k in range(K)]
+        self.E_vals_aggr = []
         self.I_asym_vals = [[] for k in range(K)]
+        self.I_asym_vals_aggr = []
         self.I_sym_vals = [[] for k in range(K)]
+        self.I_sym_vals_aggr = []
         self.I_sev_vals = [[] for k in range(K)]
+        self.I_sev_vals_aggr = []
         self.R_vals = [[] for k in range(K)]
+        self.R_vals_aggr = []
         self.D_vals = [[] for k in range(K)]
+        self.D_vals_aggr = []
 
-        # Preparing lists that are only used if a tracing model was solved
+        # Preparing lists of simulation results that are only used if a tracing model was solved
         if self.tracing_model_solved:
             self.E_tracked_vals = [[] for k in range(K)]
+            self.E_tracked_vals_aggr = []
             self.Q_asym_vals = [[] for k in range(K)]
+            self.Q_asym_vals_aggr = []
             self.Q_sym_vals = [[] for k in range(K)]
+            self.Q_sym_vals_aggr = []
             self.Q_sev_vals = [[] for k in range(K)]
+            self.Q_sev_vals_aggr = []
 
         # Extract and separate results
         for entry in results:
@@ -46,63 +57,107 @@ class Visualizer:
             else:
                 assert(len(x) == 7 * K)
             idx = 0
+
+            aggregated = 0.0
             for k in range(K):
                 assert(x[idx] >= 0.0)
                 assert(x[idx] <= 1.0)
                 self.S_vals[k].append(x[idx])
+                aggregated += x[idx]
                 idx += 1
+            self.S_vals_aggr.append(aggregated)
+
+            aggregated = 0.0
             for k in range(K):
                 assert(x[idx] >= 0.0)
                 assert(x[idx] <= 1.0)
                 self.E_vals[k].append(x[idx])
+                aggregated += x[idx]
                 idx += 1
+            self.E_vals_aggr.append(aggregated)
+
             if self.tracing_model_solved:
+                aggregated = 0.0
                 for k in range(K):
                     assert(x[idx] >= 0.0)
                     assert(x[idx] <= 1.0)
                     self.E_tracked_vals[k].append(x[idx])
+                    aggregated += x[idx]
                     idx += 1
+                self.E_tracked_vals_aggr.append(aggregated)
+
+            aggregated = 0.0
             for k in range(K):
                 assert(x[idx] >= 0.0)
                 assert(x[idx] <= 1.0)
                 self.I_asym_vals[k].append(x[idx])
+                aggregated += x[idx]
                 idx += 1
+            self.I_asym_vals_aggr.append(aggregated)
+
+            aggregated = 0.0
             for k in range(K):
                 assert(x[idx] >= 0.0)
                 assert(x[idx] <= 1.0)
                 self.I_sym_vals[k].append(x[idx])
+                aggregated += x[idx]
                 idx += 1
+            self.I_sym_vals_aggr.append(aggregated)
+
+            aggregated = 0.0
             for k in range(K):
                 assert(x[idx] >= 0.0)
                 assert(x[idx] <= 1.0)
                 self.I_sev_vals[k].append(x[idx])
+                aggregated += x[idx]
                 idx += 1
+            self.I_sev_vals_aggr.append(aggregated)
+
             if self.tracing_model_solved:
+                aggregated = 0.0
                 for k in range(K):
                     assert(x[idx] >= 0.0)
                     assert(x[idx] <= 1.0)
                     self.Q_asym_vals[k].append(x[idx])
+                    aggregated += x[idx]
                     idx += 1
+                self.Q_asym_vals_aggr.append(aggregated)
+
+                aggregated = 0.0
                 for k in range(K):
                     assert(x[idx] >= 0.0)
                     assert(x[idx] <= 1.0)
                     self.Q_sym_vals[k].append(x[idx])
+                    aggregated += x[idx]
                     idx += 1
+                self.Q_sym_vals_aggr.append(aggregated)
+
+                aggregated = 0.0
                 for k in range(K):
                     assert(x[idx] >= 0.0)
                     assert(x[idx] <= 1.0)
                     self.Q_sev_vals[k].append(x[idx])
+                    aggregated += x[idx]
                     idx += 1
+                self.Q_sev_vals_aggr.append(aggregated)
+
+            aggregated = 0.0
             for k in range(K):
                 assert(x[idx] >= 0.0)
                 assert(x[idx] <= 1.0)
                 self.R_vals[k].append(x[idx])
+                aggregated += x[idx]
                 idx += 1
+            self.R_vals_aggr.append(aggregated)
+
+            aggregated = 0.0
             for k in range(K):
                 assert(x[idx] >= 0.0)
                 assert(x[idx] <= 1.0)
                 self.D_vals[k].append(x[idx])
+                aggregated += x[idx]
                 idx += 1
+            self.D_vals_aggr.append(aggregated)
 
             # Sanity checks
             if self.tracing_model_solved:
@@ -111,6 +166,18 @@ class Visualizer:
                 assert(idx == 7 * K)
 
         # Sanity checks
+        assert(len(self.t_vals) == len(self.S_vals_aggr))
+        assert(len(self.t_vals) == len(self.E_vals_aggr))
+        assert(len(self.t_vals) == len(self.I_asym_vals_aggr))
+        assert(len(self.t_vals) == len(self.I_sym_vals_aggr))
+        assert(len(self.t_vals) == len(self.I_sev_vals_aggr))
+        assert(len(self.t_vals) == len(self.R_vals_aggr))
+        assert(len(self.t_vals) == len(self.D_vals_aggr))
+        if self.tracing_model_solved:
+            assert(len(self.t_vals) == len(self.E_tracked_vals_aggr))
+            assert(len(self.t_vals) == len(self.Q_asym_vals_aggr))
+            assert(len(self.t_vals) == len(self.Q_sym_vals_aggr))
+            assert(len(self.t_vals) == len(self.Q_sev_vals_aggr))
         for k in range(K):
             assert(len(self.t_vals) == len(self.S_vals[k]))
             assert(len(self.t_vals) == len(self.E_vals[k]))
@@ -147,9 +214,7 @@ class Visualizer:
         assert(len(self.sev_total_vals) == len(self.t_vals))
         assert(len(self.t_vals) == len(self.I_sev_vals[k]))
 
-
-
-    def plot(self):
+    def plot_all_curves(self):
         figure, axes = plot.subplots()
         figure.subplots_adjust(bottom = 0.15)
         axes.grid(linestyle = ':', linewidth = 0.5, color = "#808080")
@@ -158,49 +223,49 @@ class Visualizer:
 
         for k in range(self.K):
             S_plot, = axes.plot(self.t_vals, self.S_vals[k],
-                                color = "lightskyblue", linestyle = group_linestyles[k])
+                                color = "lightskyblue")#, linestyle = group_linestyles[k])
             S_plot.set_label("S_" + str(k))
 
             E_plot, = axes.plot(self.t_vals, self.E_vals[k],
-                                color = "teal", linestyle = group_linestyles[k])
+                                color = "teal")#, linestyle = group_linestyles[k])
             E_plot.set_label("E_" + str(k))
 
             if self.tracing_model_solved:
                 E_tracked_plot, = axes.plot(self.t_vals, self.E_tracked_vals[k],
-                                            color = "deeppink", linestyle = group_linestyles[k])
+                                            color = "deeppink")#, linestyle = group_linestyles[k])
                 E_tracked_plot.set_label("E_tracked_" + str(k))
 
             I_asym_plot, = axes.plot(self.t_vals, self.I_asym_vals[k],
-                                     color = "gold", linestyle = group_linestyles[k])
+                                     color = "gold")#, linestyle = group_linestyles[k])
             I_asym_plot.set_label("I_asym_" + str(k))
 
             I_sym_plot, = axes.plot(self.t_vals, self.I_sym_vals[k],
-                                    color = "orange", linestyle = group_linestyles[k])
+                                    color = "orange")#, linestyle = group_linestyles[k])
             I_sym_plot.set_label("I_sym_" + str(k))
 
             I_sev_plot, = axes.plot(self.t_vals, self.I_sev_vals[k],
-                                    color = "chocolate", linestyle = group_linestyles[k])
+                                    color = "chocolate")#, linestyle = group_linestyles[k])
             I_sev_plot.set_label("I_sev_" + str(k))
 
             if self.tracing_model_solved:
                 Q_asym_plot, = axes.plot(self.t_vals, self.Q_asym_vals[k],
-                                         color = "plum", linestyle = group_linestyles[k])
+                                         color = "plum")#, linestyle = group_linestyles[k])
                 Q_asym_plot.set_label("Q_asym_" + str(k))
 
                 Q_sym_plot, = axes.plot(self.t_vals, self.Q_sym_vals[k],
-                                         color = "blueviolet", linestyle = group_linestyles[k])
+                                         color = "blueviolet")#, linestyle = group_linestyles[k])
                 Q_sym_plot.set_label("Q_sym_" + str(k))
 
                 Q_sev_plot, = axes.plot(self.t_vals, self.Q_sev_vals[k],
-                                         color = "navy", linestyle = group_linestyles[k])
+                                         color = "navy")#, linestyle = group_linestyles[k])
                 Q_sev_plot.set_label("Q_sev_" + str(k))
 
             R_plot, = axes.plot(self.t_vals, self.R_vals[k],
-                                color = "limegreen", linestyle = group_linestyles[k])
+                                color = "limegreen")#, linestyle = group_linestyles[k])
             R_plot.set_label("R_" + str(k))
 
             D_plot, = axes.plot(self.t_vals, self.D_vals[k],
-                                color = "firebrick", linestyle = group_linestyles[k])
+                                color = "firebrick")#, linestyle = group_linestyles[k])
             D_plot.set_label("D_" + str(k))
 
         sev_total_plot, = axes.plot(self.t_vals, self.sev_total_vals,
@@ -211,6 +276,68 @@ class Visualizer:
         beds_plot = axes.hlines(float(self.beds / self.N_total), self.t_start, self.t_end,
                                 color = "cornflowerblue", linestyle = "dashed")
         beds_plot.set_label("beds")
+
+        # Shrink current axis by 20%
+        box = axes.get_position()
+        axes.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+        axes.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+        plot.savefig(self.filename + "_full.pdf")
+        ymax = 0.2
+        axes.set_ylim([-ymax * 0.05, ymax])
+        plot.savefig(self.filename + "_small.pdf")
+        ymax = 0.005
+        axes.set_ylim([-ymax * 0.05, ymax])
+        plot.savefig(self.filename + "_super_small.pdf")
+        plot.close("all")
+
+    def plot_aggregated_curves(self):
+        figure, axes = plot.subplots()
+        figure.subplots_adjust(bottom = 0.15)
+        axes.grid(linestyle = ':', linewidth = 0.5, color = "#808080")
+
+        S_plot, = axes.plot(self.t_vals, self.S_vals_aggr)
+        S_plot.set_label("S")
+
+        E_plot, = axes.plot(self.t_vals, self.E_vals_aggr)
+        E_plot.set_label("E")
+
+        if self.tracing_model_solved:
+            E_tracked_plot, = axes.plot(self.t_vals, self.E_tracked_vals_aggr)
+            E_tracked_plot.set_label("E_tracked")
+
+        I_asym_plot, = axes.plot(self.t_vals, self.I_asym_vals_aggr, color = "gold")
+        I_asym_plot.set_label("I_asym")
+
+        I_sym_plot, = axes.plot(self.t_vals, self.I_sym_vals_aggr, color = "orange")
+        I_sym_plot.set_label("I_sym")
+
+        I_sev_plot, = axes.plot(self.t_vals, self.I_sev_vals_aggr, color = "chocolate")
+        I_sev_plot.set_label("I_sev")
+
+        if self.tracing_model_solved:
+            Q_asym_plot, = axes.plot(self.t_vals, self.Q_asym_vals_aggr, color = "plum")
+            Q_asym_plot.set_label("Q_asym")
+
+            Q_sym_plot, = axes.plot(self.t_vals, self.Q_sym_vals_aggr, color = "blueviolet")
+            Q_sym_plot.set_label("Q_sym")
+
+            Q_sev_plot, = axes.plot(self.t_vals, self.Q_sev_vals_aggr, color = "navy")
+            Q_sev_plot.set_label("Q_sev")
+
+        R_plot, = axes.plot(self.t_vals, self.R_vals_aggr, color = "limegreen")
+        R_plot.set_label("R")
+
+        D_plot, = axes.plot(self.t_vals, self.D_vals_aggr, color = "firebrick")
+        D_plot.set_label("D")
+
+        # todo
+        # sev_total_plot, = axes.plot(self.t_vals, self.sev_total_vals, color = "chocolate", linestyle = "dashed")
+        # sev_total_plot.set_label("sev_total")
+
+        # Plot horizontal lines for beds
+        # beds_plot = axes.hlines(float(self.beds / self.N_total), self.t_start, self.t_end,
+        #                         color = "cornflowerblue", linestyle = "dashed")
+        # beds_plot.set_label("beds")
 
         # Shrink current axis by 20%
         box = axes.get_position()
