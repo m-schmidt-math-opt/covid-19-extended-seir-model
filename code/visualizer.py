@@ -218,6 +218,8 @@ class Visualizer:
         figure, axes = plot.subplots()
         figure.subplots_adjust(bottom = 0.15)
         axes.grid(linestyle = ':', linewidth = 0.5, color = "#808080")
+        axes.set_xlabel("Days")
+        axes.set_ylabel("Individuals")
 
         group_linestyles = {0: "solid", 1: "dotted"} # well, yes, that's hard-coded for K = 2
 
@@ -294,6 +296,8 @@ class Visualizer:
         figure, axes = plot.subplots()
         figure.subplots_adjust(bottom = 0.15)
         axes.grid(linestyle = ':', linewidth = 0.5, color = "#808080")
+        axes.set_xlabel("Days")
+        axes.set_ylabel("Individuals")
 
         S_plot, = axes.plot(self.t_vals, self.S_vals_aggr)
         S_plot.set_label("S")
@@ -356,6 +360,8 @@ class Visualizer:
         figure, axes = plot.subplots()
         figure.subplots_adjust(bottom = 0.15)
         axes.grid(linestyle = ':', linewidth = 0.5, color = "#808080")
+        axes.set_xlabel("Days")
+        axes.set_ylabel("Individuals")
 
         # 0: old; 1: young
         group_linestyles = {0: "solid", 1: "dotted"} # well, yes, that's hard-coded for K = 2
@@ -394,6 +400,8 @@ class Visualizer:
         figure, axes = plot.subplots()
         figure.subplots_adjust(bottom = 0.15)
         axes.grid(linestyle = ':', linewidth = 0.5, color = "#808080")
+        axes.set_xlabel("Days")
+        axes.set_ylabel("Individuals")
 
         # 0: old; 1: young
         group_linestyles = {0: "solid", 1: "dotted"} # well, yes, that's hard-coded for K = 2
@@ -443,6 +451,8 @@ class Visualizer:
         figure, axes = plot.subplots()
         figure.subplots_adjust(bottom = 0.15)
         axes.grid(linestyle = ':', linewidth = 0.5, color = "#808080")
+        axes.set_xlabel("Days")
+        axes.set_ylabel("Individuals")
 
         # 0: old, 1: young
         group_linestyles = {0: "solid", 1: "dotted"} # well, yes, that's hard-coded for K = 2

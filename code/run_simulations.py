@@ -2,8 +2,8 @@
 import os
 
 # Local imports
-#from data_reader import Data_Reader # reader for old data format
-from data_reader_beta_matrices import Data_Reader
+from data_reader import Data_Reader # reader for old data format
+#from data_reader_beta_matrices import Data_Reader
 from seiiird_model import SEIIIRD_Model
 from seiiird_tracing_model import SEIIIRD_Tracing_Model
 from explicit_euler import Explicit_Euler
@@ -13,11 +13,11 @@ from visualizer import Visualizer
 # Start and end time, stepsize
 t_start = 0
 t_end = 500
-stepsize = 1e-1
+stepsize = 1e-2
 
 # Preparing data parsing
-data_set_name = "2020-10-29"
-data_directory_name = "../new-data/" + data_set_name + "/"
+data_set_name = "data_for_new_plots"
+data_directory_name = "../" + data_set_name + "/"
 data_directory = os.fsencode(data_directory_name)
 
 for file in os.listdir(data_directory):
@@ -56,9 +56,10 @@ for file in os.listdir(data_directory):
         N_total = sum(N)
         visualizer = Visualizer(tracing_data_given, results, N, N_total, K, beds, t_start, t_end,
                                 "../results/" + data_set_name + "/" + data_filename_prefix)
-#        visualizer.plot_all_curves()
-        visualizer.plot_aggregated_curves()
-#        visualizer.paper_plot_figure_1()
-#        if tracing_data_given:
-#            visualizer.paper_plot_figure_3()
-#            visualizer.paper_plot_figure_4()
+
+        visualizer.plot_all_curves()
+        #visualizer.plot_aggregated_curves()
+        visualizer.paper_plot_figure_1()
+        if tracing_data_given:
+            visualizer.paper_plot_figure_3()
+            visualizer.paper_plot_figure_4()
