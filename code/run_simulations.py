@@ -1,5 +1,6 @@
 # Global imports
 import os
+import time
 
 # Local imports
 from data_reader import Data_Reader # reader for old data format
@@ -45,7 +46,12 @@ for file in os.listdir(data_directory):
 
         # Solve the ODE system
         explicit_euler = Explicit_Euler(ode_system, stepsize)
+        start_time = time.time()
         results = explicit_euler.solve(t_start, x0, t_end)
+        end_time = time.time()
+        print("Required CPU time = "
+              + str(round(end_time - start_time, 3))
+              + " seconds")
 
         # Analyze results
         result_analyzer = Result_Analyzer(tracing_data_given, results, stepsize, N, K, beds, t_start, t_end,
