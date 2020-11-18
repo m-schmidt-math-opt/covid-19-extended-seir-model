@@ -13,11 +13,11 @@ from visualizer import Visualizer
 # Start and end time, stepsize
 t_start = 0
 t_end = 500
-stepsize = 1e-2
+stepsize = 1e-1
 
 # Preparing data parsing
-data_set_name = "data_for_new_plots"
-data_directory_name = "../" + data_set_name + "/"
+data_set_name = "debugging"
+data_directory_name = "../data-internal/" + data_set_name + "/"
 data_directory = os.fsencode(data_directory_name)
 
 for file in os.listdir(data_directory):

@@ -216,10 +216,11 @@ class Visualizer:
 
     def plot_all_curves(self):
         figure, axes = plot.subplots()
-        figure.subplots_adjust(bottom = 0.15)
+        figure.subplots_adjust(bottom = 0.15, left=0.15)
         axes.grid(linestyle = ':', linewidth = 0.5, color = "#808080")
-        axes.set_xlabel("Days")
-        axes.set_ylabel("Individuals")
+        axes.set_xlabel("Days", fontsize=14)
+        axes.set_ylabel("Share of Individuals", fontsize=14)
+        axes.tick_params(axis='both', which='major', labelsize=14)
 
         group_linestyles = {0: "solid", 1: "dotted"} # well, yes, that's hard-coded for K = 2
 
@@ -296,8 +297,9 @@ class Visualizer:
         figure, axes = plot.subplots()
         figure.subplots_adjust(bottom = 0.15)
         axes.grid(linestyle = ':', linewidth = 0.5, color = "#808080")
-        axes.set_xlabel("Days")
-        axes.set_ylabel("Individuals")
+        axes.set_xlabel("Days", fontsize=14)
+        axes.set_ylabel("Share of Individuals", fontsize=14)
+        axes.tick_params(axis='both', which='major', labelsize=14)
 
         S_plot, = axes.plot(self.t_vals, self.S_vals_aggr)
         S_plot.set_label("S")
@@ -346,7 +348,7 @@ class Visualizer:
         # Shrink current axis by 20%
         box = axes.get_position()
         axes.set_position([box.x0, box.y0, box.width * 0.8, box.height])
-        axes.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+        ###axes.legend(loc='center left', bbox_to_anchor=(1, 0.5))
         plot.savefig(self.filename + "_full.pdf")
         ymax = 0.2
         axes.set_ylim([-ymax * 0.05, ymax])
@@ -358,10 +360,11 @@ class Visualizer:
 
     def paper_plot_figure_1(self):
         figure, axes = plot.subplots()
-        figure.subplots_adjust(bottom = 0.15)
+        figure.subplots_adjust(bottom = 0.15, left=0.15)
         axes.grid(linestyle = ':', linewidth = 0.5, color = "#808080")
-        axes.set_xlabel("Days")
-        axes.set_ylabel("Individuals")
+        axes.set_xlabel("Days", fontsize=14)
+        axes.set_ylabel("Individuals", fontsize=14)
+        axes.tick_params(axis='both', which='major', labelsize=14)
 
         # 0: old; 1: young
         group_linestyles = {0: "solid", 1: "dotted"} # well, yes, that's hard-coded for K = 2
@@ -398,10 +401,11 @@ class Visualizer:
 
     def paper_plot_figure_3(self):
         figure, axes = plot.subplots()
-        figure.subplots_adjust(bottom = 0.15)
+        figure.subplots_adjust(bottom = 0.15, left=0.2)
         axes.grid(linestyle = ':', linewidth = 0.5, color = "#808080")
-        axes.set_xlabel("Days")
-        axes.set_ylabel("Individuals")
+        axes.set_xlabel("Days", fontsize=14)
+        axes.set_ylabel("Individuals", fontsize=14)
+        axes.tick_params(axis='both', which='major', labelsize=14)
 
         # 0: old; 1: young
         group_linestyles = {0: "solid", 1: "dotted"} # well, yes, that's hard-coded for K = 2
@@ -449,10 +453,11 @@ class Visualizer:
 
     def paper_plot_figure_4(self):
         figure, axes = plot.subplots()
-        figure.subplots_adjust(bottom = 0.15)
+        figure.subplots_adjust(bottom = 0.15, left=0.15)
         axes.grid(linestyle = ':', linewidth = 0.5, color = "#808080")
-        axes.set_xlabel("Days")
-        axes.set_ylabel("Individuals")
+        axes.set_xlabel("Days", fontsize=14)
+        axes.set_ylabel("Individuals", fontsize=14)
+        axes.tick_params(axis='both', which='major', labelsize=14)
 
         # 0: old, 1: young
         group_linestyles = {0: "solid", 1: "dotted"} # well, yes, that's hard-coded for K = 2

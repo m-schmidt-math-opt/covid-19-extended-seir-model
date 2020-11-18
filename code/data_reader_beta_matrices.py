@@ -135,7 +135,7 @@ class Data_Reader:
                 elif row[0] == "S":
                     S = vector(self._to_float(row[1:1+K]))
                     assert(len(S) == K)
-                elif row[0] == "E_NT":
+                elif row[0] == "E":
                     E = vector(self._to_float(row[1:1+K]))
                     assert(len(E) == K)
                 elif row[0] == "E_T":
