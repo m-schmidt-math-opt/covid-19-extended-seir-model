@@ -21,7 +21,7 @@ class SEIIIRD_Model:
         self.gamma_sev_r = packed_parameters[12]
         self.beds = packed_parameters[13]
 
-        self.numerical_tolerance_fine = 1e-12
+        self.numerical_tolerance_fine = 1e-6 # todo
         self.numerical_tolerance_coarse = 1e-6
 
     def eval_rhs(self, x):

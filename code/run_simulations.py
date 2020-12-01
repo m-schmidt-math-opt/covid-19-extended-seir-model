@@ -3,8 +3,8 @@ import os
 import time
 
 # Local imports
-#from data_reader import Data_Reader # reader for old data format
-from data_reader_beta_matrices import Data_Reader
+from data_reader import Data_Reader # reader for old data format
+#from data_reader_beta_matrices import Data_Reader
 from seiiird_model import SEIIIRD_Model
 from seiiird_tracing_model import SEIIIRD_Tracing_Model
 from explicit_euler import Explicit_Euler
@@ -17,7 +17,7 @@ t_end = 500
 stepsize = 1e-1
 
 # Preparing data parsing
-data_set_name = "2020-11-20"
+data_set_name = "corrected-data-for-submitted-paper"
 data_directory_name = "../new-data/" + data_set_name + "/"
 data_directory = os.fsencode(data_directory_name)
 
