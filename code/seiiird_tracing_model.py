@@ -7,6 +7,7 @@ class SEIIIRD_Tracing_Model:
         print("Instantiate the SEIIIRD tracing model ...")
         self.K = packed_parameters[0]
         self.N = packed_parameters[1]
+        self.N_total = sum(self.N)
         self.beta_asym = packed_parameters[2]
         self.beta_sym = packed_parameters[3]
         self.beta_sev = packed_parameters[4]
@@ -21,7 +22,7 @@ class SEIIIRD_Tracing_Model:
         self.psi = packed_parameters[13]
         self.beds = packed_parameters[14]
 
-        self.numerical_tolerance = 1e-5 # todo was 1e-12 before
+        self.numerical_tolerance = 1e-6 # todo was 1e-12 before
 
     def eval_rhs(self, x):
         S = x[0 : self.K]
@@ -38,7 +39,7 @@ class SEIIIRD_Tracing_Model:
 
         # Sanity checks
         assert(x.shape[0] == 11 * self.K)
-        assert(abs(sum(x) - 1) < self.numerical_tolerance)
+        # assert(abs(sum(x) - self.N_total) < self.numerical_tolerance) # todo
         assert(len(S) == self.K)
         assert(len(E) == self.K)
         assert(len(E_tracked) == self.K)
@@ -53,27 +54,27 @@ class SEIIIRD_Tracing_Model:
 
         for k in range(self.K):
             assert(S[k] >= 0.0)
-            assert(S[k] <= 1.0)
+            assert(S[k] <= self.N_total)
             assert(E[k] >= 0.0)
-            assert(E[k] <= 1.0)
+            assert(E[k] <= self.N_total)
             assert(E_tracked[k] >= 0.0)
-            assert(E_tracked[k] <= 1.0)
+            assert(E_tracked[k] <= self.N_total)
             assert(I_asym[k] >= 0.0)
-            assert(I_asym[k] <= 1.0)
+            assert(I_asym[k] <= self.N_total)
             assert(I_sym[k] >= 0.0)
-            assert(I_sym[k] <= 1.0)
+            assert(I_sym[k] <= self.N_total)
             assert(I_sev[k] >= 0.0)
-            assert(I_sev[k] <= 1.0)
+            assert(I_sev[k] <= self.N_total)
             assert(Q_asym[k] >= 0.0)
-            assert(Q_asym[k] <= 1.0)
+            assert(Q_asym[k] <= self.N_total)
             assert(Q_sym[k] >= 0.0)
-            assert(Q_sym[k] <= 1.0)
+            assert(Q_sym[k] <= self.N_total)
             assert(Q_sev[k] >= 0.0)
-            assert(Q_sev[k] <= 1.0)
+            assert(Q_sev[k] <= self.N_total)
             assert(R[k] >= 0.0)
-            assert(R[k] <= 1.0)
+            assert(R[k] <= self.N_total)
             assert(D[k] >= 0.0)
-            assert(D[k] <= 1.0)
+            assert(D[k] <= self.N_total)
 
         f_vec = np.empty(11*self.K)
         idx = 0
@@ -85,7 +86,7 @@ class SEIIIRD_Tracing_Model:
             for l in range(self.K):
                 factor += self.beta_asym[l,k] * I_asym[l] + self.beta_sym[l,k] * I_sym[l] + self.beta_sev[l,k] * I_sev[l]
             assert(factor >= 0.0)
-            f_vec[idx] = -factor * S[k]
+            f_vec[idx] = -factor * S[k] / self.N_total
             assert(f_vec[idx] <= 0.0)
             overall_rhs += f_vec[idx]
             idx += 1
@@ -97,7 +98,7 @@ class SEIIIRD_Tracing_Model:
             for l in range(self.K):
                 factor += self.beta_asym[l,k] * I_asym[l]
             assert(factor >= 0.0)
-            first_term = factor * S[k]
+            first_term = factor * S[k] / self.N_total
 
             # Second term
             factor = 0.0
@@ -105,7 +106,7 @@ class SEIIIRD_Tracing_Model:
                 psi_lk = self.psi[l] * self.psi[k]
                 factor += self.beta_sym[l,k] * (1.0 - psi_lk) * I_sym[l] + self.beta_sev[l,k] * (1.0 - psi_lk) * I_sev[l]
             assert(factor >= 0.0)
-            second_term = factor * S[k]
+            second_term = factor * S[k] / self.N_total
 
             # Third term and final result
             f_vec[idx] = first_term + second_term - self.epsilon[k] * E[k]
@@ -119,7 +120,7 @@ class SEIIIRD_Tracing_Model:
                 psi_lk = self.psi[l] * self.psi[k]
                 factor += self.beta_sym[l,k] * psi_lk * I_sym[l] + self.beta_sev[l,k] * psi_lk * I_sev[l]
             assert(factor >= 0.0)
-            f_vec[idx] = factor * S[k] - self.epsilon[k] * E_tracked[k]
+            f_vec[idx] = factor * S[k] / self.N_total - self.epsilon[k] * E_tracked[k]
             overall_rhs += f_vec[idx]
             idx += 1
 
@@ -185,11 +186,11 @@ class SEIIIRD_Tracing_Model:
 
     def _get_sigma_k(self, I_sev_k, Q_sev_k, k):
         assert(len(self.N) == self.K)
-        N_total = sum(self.N)
-        if ((I_sev_k + Q_sev_k) * self.N[k] <= (self.N[k] / N_total) * self.beds):
+        beds_for_group_k = (self.N[k] / self.N_total) * self.beds
+        if I_sev_k + Q_sev_k <= beds_for_group_k:
             return self.sigma[k]
         else:
-            sigma_k = (self.sigma[k] * (self.N[k] / N_total) * self.beds + (I_sev_k + Q_sev_k) * self.N[k] - (self.N[k] / N_total) * self.beds) / ((I_sev_k + Q_sev_k) * self.N[k])
+            sigma_k = (self.sigma[k] * beds_for_group_k + (I_sev_k + Q_sev_k) - beds_for_group_k) / (I_sev_k + Q_sev_k)
             assert(sigma_k >= 0.0)
             assert(sigma_k <= 1.0)
             return sigma_k

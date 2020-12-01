@@ -20,6 +20,7 @@ class Data_Reader:
                     assert(K > 0)
                 elif row[0] == "N":
                     N = vector(self._to_float(row[1:1+K]))
+                    assert(sum(N) == N_total)
                     assert(len(N) == K)
                 elif row[0] == "beta_asym":
                     beta_asym = matrix(vector(self._to_float(row[1:1+K*K]))).reshape((K, K))
@@ -102,8 +103,10 @@ class Data_Reader:
         if tracing_data_given:
             assert(nr_of_given_tracing_data == 5)
             x0_total = np.concatenate((S, E, E_tracked, I_asym, I_sym, I_sev, Q_asym, Q_sym, Q_sev, R, D))
-            x0 = vector([x / N_total for x in x0_total])
-            assert(x0.shape[0] == 11 * K)
+            assert(sum(S) + sum(E) + sum(E_tracked) + sum(I_asym) + sum(I_sym) + sum(I_sev) + sum(Q_asym) + sum(Q_sym) + sum(Q_sev) + sum(R) + sum(D) == N_total)
+            x0_share = vector([x / N_total for x in x0_total])
+            assert(x0_total.shape[0] == 11 * K)
+            assert(x0_share.shape[0] == 11 * K)
             packed_data = [tracing_data_given,
                            K,
                            N,
@@ -120,12 +123,14 @@ class Data_Reader:
                            gamma_sev_r_hat,
                            psi,
                            beds,
-                           x0]
+                           x0_total]
         else:
             assert(nr_of_given_tracing_data == 0)
             x0_total = np.concatenate((S, E, I_asym, I_sym, I_sev, R, D))
-            x0 = vector([x / N_total for x in x0_total])
-            assert(x0.shape[0] == 7 * K)
+            assert(sum(S) + sum(E) + sum(I_asym) + sum(I_sym) + sum(I_sev) + sum(R) + sum(D) == N_total)
+            x0_share = vector([x / N_total for x in x0_total])
+            assert(x0_total.shape[0] == 7 * K)
+            assert(x0_share.shape[0] == 7 * K)
             packed_data = [tracing_data_given,
                            K,
                            N,
@@ -141,7 +146,7 @@ class Data_Reader:
                            gamma_sev_d_hat,
                            gamma_sev_r_hat,
                            beds,
-                           x0]
+                           x0_total]
 
         return packed_data
 

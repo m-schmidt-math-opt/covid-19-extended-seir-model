@@ -6,74 +6,6 @@ import csv
 
 class Data_Reader:
 
-    def parse_symmetric_matrix(self, matrix_data, n):
-        sym_matrix = matrix(matrix_data)
-        # replace nan entries at [i,j] with entries at [j,i]
-        for i in range(n):
-            for j in range(n):
-                if math.isnan(sym_matrix[i,j]):
-                    # check only lower diagonal part is nan
-                    assert(i > j)
-                    assert(not math.isnan(sym_matrix[j,i]))
-                    sym_matrix[i,j] = sym_matrix[j,i]
-        return sym_matrix
-
-    def print_all_data(self,
-                       tracing_data_given,
-                       N_total,
-                       K,
-                       N,
-                       beta_asym,
-                       beta_sym,
-                       beta_sev,
-                       epsilon,
-                       eta,
-                       nu,
-                       sigma,
-                       gamma_asym,
-                       gamma_sym,
-                       gamma_sev_d_hat,
-                       gamma_sev_r_hat,
-                       psi,
-                       beds,
-                       x0):
-        print("tracing_data_given:")
-        print(tracing_data_given)
-        print("N_total:")
-        print(N_total)
-        print("K:")
-        print(K)
-        print("N:")
-        print(N)
-        print("beta_asym:")
-        print(beta_asym)
-        print("beta_sym:")
-        print(beta_sym)
-        print("beta_sev:")
-        print(beta_sev)
-        print("epsilon:")
-        print(epsilon)
-        print("eta:")
-        print(eta)
-        print("nu:")
-        print(nu)
-        print("sigma:")
-        print(sigma)
-        print("gamma_asym:")
-        print(gamma_asym)
-        print("gamma_sym:")
-        print(gamma_sym)
-        print("gamma_sev_d_hat:")
-        print(gamma_sev_d_hat)
-        print("gamma_sev_r_hat:")
-        print(gamma_sev_r_hat)
-        print("psi:")
-        print(psi)
-        print("beds:")
-        print(beds)
-        print("x0:")
-        print(x0)
-
     def read_from_csv_file(self, filename, print_data = False):
         print("Parse data from CSV file " + filename + " ...")
 
@@ -84,17 +16,17 @@ class Data_Reader:
             beta_sym_rows = []
             beta_sev_rows = []
             for row in csv_reader:
-                if row[0] == "\ufeffN_total": # What the heck?!
+                if row[0] == "\ufeffN_total": # todo What the heck?!
                     N_total = int(float(row[1].replace(",", ".")))
                     assert(N_total > 0)
                 elif row[0] == "K":
                     K = int(float(row[1].replace(",", ".")))
                     assert(K > 0)
                 elif row[0] == "Group_labels":
-                    pass
-                    #print(row) # todo
+                    pass # todo maybe use later for plots
                 elif row[0] == "N":
                     N = vector(self._to_float(row[1:1+K]))
+                    assert(sum(N) == N_total)
                     assert(len(N) == K)
                 elif row[0] == "beta_asym":
                     beta_asym_rows.append(vector(self._to_float(row[1:1+K])))
@@ -173,37 +105,38 @@ class Data_Reader:
                     print("Unknown data field: " + str(row[0]))
                     assert(False)
 
-        beta_asym = self.parse_symmetric_matrix(beta_asym_rows, K)
-        beta_sym = self.parse_symmetric_matrix(beta_sym_rows, K)
-        beta_sev = self.parse_symmetric_matrix(beta_sev_rows, K)
+        beta_asym = self._parse_symmetric_matrix(beta_asym_rows, K)
+        beta_sym = self._parse_symmetric_matrix(beta_sym_rows, K)
+        beta_sev = self._parse_symmetric_matrix(beta_sev_rows, K)
 
-        numerical_tolerance = 1e-5 # todo 1e-12 sollten es sein
+        numerical_tolerance = 1e-12
         tracing_data_given = (nr_of_given_tracing_data >= 1)
         if tracing_data_given:
             assert(nr_of_given_tracing_data == 5)
             x0_total = np.concatenate((S, E, E_tracked, I_asym, I_sym, I_sev, Q_asym, Q_sym, Q_sev, R, D))
-            x0 = vector([x / N_total for x in x0_total])
-            assert(abs(sum(x0) - 1.0) < numerical_tolerance)
-            assert(x0.shape[0] == 11 * K)
+            assert(abs(sum(x0_total) - N_total) < numerical_tolerance)
+            x0_share = vector([x / N_total for x in x0_total])
+            assert(x0_total.shape[0] == 11 * K)
+            assert(x0_share.shape[0] == 11 * K)
             if print_data:
-                self.print_all_data(tracing_data_given,
-                                    N_total,
-                                    K,
-                                    N,
-                                    beta_asym,
-                                    beta_sym,
-                                    beta_sev,
-                                    epsilon,
-                                    eta,
-                                    nu,
-                                    sigma,
-                                    gamma_asym,
-                                    gamma_sym,
-                                    gamma_sev_d_hat,
-                                    gamma_sev_r_hat,
-                                    psi,
-                                    beds,
-                                    x0)
+                self._print_all_data(tracing_data_given,
+                                     N_total,
+                                     K,
+                                     N,
+                                     beta_asym,
+                                     beta_sym,
+                                     beta_sev,
+                                     epsilon,
+                                     eta,
+                                     nu,
+                                     sigma,
+                                     gamma_asym,
+                                     gamma_sym,
+                                     gamma_sev_d_hat,
+                                     gamma_sev_r_hat,
+                                     psi,
+                                     beds,
+                                     x0_total)
             packed_data = [tracing_data_given,
                            K,
                            N,
@@ -220,13 +153,14 @@ class Data_Reader:
                            gamma_sev_r_hat,
                            psi,
                            beds,
-                           x0]
+                           x0_total]
         else:
             assert(nr_of_given_tracing_data == 0)
             x0_total = np.concatenate((S, E, I_asym, I_sym, I_sev, R, D))
-            x0 = vector([x / N_total for x in x0_total])
-            assert(abs(sum(x0) - 1.0) < numerical_tolerance)
-            assert(x0.shape[0] == 7 * K)
+            x0_share = vector([x / N_total for x in x0_total])
+            assert(abs(sum(x0_total) - N_total) < numerical_tolerance)
+            assert(x0_total.shape[0] == 7 * K)
+            assert(x0_share.shape[0] == 7 * K)
             packed_data = [tracing_data_given,
                            K,
                            N,
@@ -242,11 +176,79 @@ class Data_Reader:
                            gamma_sev_d_hat,
                            gamma_sev_r_hat,
                            beds,
-                           x0]
+                           x0_total]
 
         return packed_data
 
     def _to_float(self, my_list):
         return [float(x.replace(",",".")) if x is not '' else float('nan') for x in my_list]
+
+    def _parse_symmetric_matrix(self, matrix_data, n):
+        sym_matrix = matrix(matrix_data)
+        # replace nan entries at [i,j] with entries at [j,i]
+        for i in range(n):
+            for j in range(n):
+                if math.isnan(sym_matrix[i,j]):
+                    # check only lower diagonal part is nan
+                    assert(i > j)
+                    assert(not math.isnan(sym_matrix[j,i]))
+                    sym_matrix[i,j] = sym_matrix[j,i]
+        return sym_matrix
+
+    def _print_all_data(self,
+                        tracing_data_given,
+                        N_total,
+                        K,
+                        N,
+                        beta_asym,
+                        beta_sym,
+                        beta_sev,
+                        epsilon,
+                        eta,
+                        nu,
+                        sigma,
+                        gamma_asym,
+                        gamma_sym,
+                        gamma_sev_d_hat,
+                        gamma_sev_r_hat,
+                        psi,
+                        beds,
+                        x0_total):
+        print("tracing_data_given:")
+        print(tracing_data_given)
+        print("N_total:")
+        print(N_total)
+        print("K:")
+        print(K)
+        print("N:")
+        print(N)
+        print("beta_asym:")
+        print(beta_asym)
+        print("beta_sym:")
+        print(beta_sym)
+        print("beta_sev:")
+        print(beta_sev)
+        print("epsilon:")
+        print(epsilon)
+        print("eta:")
+        print(eta)
+        print("nu:")
+        print(nu)
+        print("sigma:")
+        print(sigma)
+        print("gamma_asym:")
+        print(gamma_asym)
+        print("gamma_sym:")
+        print(gamma_sym)
+        print("gamma_sev_d_hat:")
+        print(gamma_sev_d_hat)
+        print("gamma_sev_r_hat:")
+        print(gamma_sev_r_hat)
+        print("psi:")
+        print(psi)
+        print("beds:")
+        print(beds)
+        print("x0_total:")
+        print(x0_total)
 
 # class Data_Reader

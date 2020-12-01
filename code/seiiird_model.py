@@ -7,6 +7,7 @@ class SEIIIRD_Model:
         print("Instantiate the SEIIIRD model ...")
         self.K = packed_parameters[0]
         self.N = packed_parameters[1]
+        self.N_total = sum(self.N)
         self.beta_asym = packed_parameters[2]
         self.beta_sym = packed_parameters[3]
         self.beta_sev = packed_parameters[4]
@@ -20,7 +21,8 @@ class SEIIIRD_Model:
         self.gamma_sev_r = packed_parameters[12]
         self.beds = packed_parameters[13]
 
-        self.numerical_tolerance = 1e-12
+        self.numerical_tolerance_fine = 1e-12
+        self.numerical_tolerance_coarse = 1e-6
 
     def eval_rhs(self, x):
         S = x[0 : self.K]
@@ -33,7 +35,7 @@ class SEIIIRD_Model:
 
         # Sanity checks
         assert(x.shape[0] == 7 * self.K)
-        assert(abs(sum(x) - 1) < self.numerical_tolerance)
+        assert(abs(sum(x) - sum(self.N)) < self.numerical_tolerance_coarse)
         assert(len(S) == self.K)
         assert(len(E) == self.K)
         assert(len(I_asym) == self.K)
@@ -46,13 +48,15 @@ class SEIIIRD_Model:
         idx = 0
         overall_rhs = 0
 
+        beta_factor = 1 # todo can be deleted after testing/debugging
+
         # ODE rhs for S
         for k in range(self.K):
             factor = 0.0
             for l in range(self.K):
-                factor += self.beta_asym[l,k] * I_asym[l] + self.beta_sym[l,k] * I_sym[l] + self.beta_sev[l,k] * I_sev[l]
+                factor += beta_factor * self.beta_asym[l,k] * I_asym[l] + beta_factor * self.beta_sym[l,k] * I_sym[l] + beta_factor * self.beta_sev[l,k] * I_sev[l]
             assert(factor >= 0.0)
-            f_vec[idx] = -factor * S[k]
+            f_vec[idx] = -factor * S[k] / self.N_total
             overall_rhs += f_vec[idx]
             idx += 1
 
@@ -60,9 +64,9 @@ class SEIIIRD_Model:
         for k in range(self.K):
             factor = 0.0
             for l in range(self.K):
-                factor += self.beta_asym[l,k] * I_asym[l] + self.beta_sym[l,k] * I_sym[l] + self.beta_sev[l,k] * I_sev[l]
+                factor += beta_factor * self.beta_asym[l,k] * I_asym[l] + beta_factor * self.beta_sym[l,k] * I_sym[l] + beta_factor * self.beta_sev[l,k] * I_sev[l]
             assert(factor >= 0.0)
-            f_vec[idx] = factor * S[k] - self.epsilon[k] * E[k]
+            f_vec[idx] = factor * S[k] / self.N_total - self.epsilon[k] * E[k]
             overall_rhs += f_vec[idx]
             idx += 1
 
@@ -101,17 +105,17 @@ class SEIIIRD_Model:
 
         # Sanity checks
         assert(idx == 7 * self.K)
-        assert(abs(overall_rhs) < self.numerical_tolerance)
+        assert(abs(overall_rhs) < self.numerical_tolerance_fine)
 
         return f_vec
 
     def _get_sigma_k(self, I_sev_k, k):
         assert(len(self.N) == self.K)
-        N_total = sum(self.N)
-        if (I_sev_k * self.N[k] <= (self.N[k] / N_total) * self.beds):
+        beds_for_group_k = (self.N[k] / self.N_total) * self.beds
+        if I_sev_k <= beds_for_group_k:
             return self.sigma[k]
         else:
-            sigma_k = (self.sigma[k] * (self.N[k] / N_total) * self.beds + I_sev_k * self.N[k] - (self.N[k] / N_total) * self.beds) / (I_sev_k * self.N[k])
+            sigma_k = (self.sigma[k] * beds_for_group_k + I_sev_k - beds_for_group_k) / I_sev_k
             assert(sigma_k >= 0.0)
             assert(sigma_k <= 1.0)
             return sigma_k

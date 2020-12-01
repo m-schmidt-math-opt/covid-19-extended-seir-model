@@ -4,11 +4,12 @@ import numpy as np
 
 class Visualizer:
 
-    def __init__(self, tracing_model_solved, results, N, N_total, K, beds, t_start, t_end, filename):
+    def __init__(self, tracing_model_solved, result_dict, N, K, beds, t_start, t_end, filename):
         # Store given values
         self.tracing_model_solved = tracing_model_solved
+        self.result_dict = result_dict
         self.N = N
-        self.N_total = N_total
+        self.N_total = sum(N)
         self.K = K
         self.beds = beds
         self.t_start = t_start
@@ -17,209 +18,42 @@ class Visualizer:
 
         # Sanity checks
         assert(self.t_start < self.t_end)
-        assert(self.N_total == sum(self.N))
 
-        # Prepare lists of simulation results
-        self.t_vals = []
-        self.S_vals = [[] for k in range(K)]
-        self.S_vals_aggr = []
-        self.E_vals = [[] for k in range(K)]
-        self.E_vals_aggr = []
-        self.I_asym_vals = [[] for k in range(K)]
-        self.I_asym_vals_aggr = []
-        self.I_sym_vals = [[] for k in range(K)]
-        self.I_sym_vals_aggr = []
-        self.I_sev_vals = [[] for k in range(K)]
-        self.I_sev_vals_aggr = []
-        self.R_vals = [[] for k in range(K)]
-        self.R_vals_aggr = []
-        self.D_vals = [[] for k in range(K)]
-        self.D_vals_aggr = []
+        # Unpack results
+        self.t_vals = self.result_dict["t_vals"]
+        self.S_vals = self.result_dict["S_vals"]
+        self.S_vals_aggr = self._aggregate_over_groups(self.S_vals)
+        self.E_vals = self.result_dict["E_vals"]
+        self.E_vals_aggr = self._aggregate_over_groups(self.E_vals)
+        self.I_asym_vals = self.result_dict["I_asym_vals"]
+        self.I_asym_vals_aggr = self._aggregate_over_groups(self.I_asym_vals)
+        self.I_sym_vals = self.result_dict["I_sym_vals"]
+        self.I_sym_vals_aggr =  self._aggregate_over_groups(self.I_sym_vals)
+        self.I_sev_vals = self.result_dict["I_sev_vals"]
+        self.I_sev_vals_aggr =  self._aggregate_over_groups(self.I_sev_vals)
+        self.R_vals = self.result_dict["R_vals"]
+        self.R_vals_aggr = self._aggregate_over_groups(self.R_vals)
+        self.D_vals = self.result_dict["D_vals"]
+        self.D_vals_aggr = self._aggregate_over_groups(self.D_vals)
+        self.sev_total_vals = self.result_dict["sev_total"]
 
         # Preparing lists of simulation results that are only used if a tracing model was solved
         if self.tracing_model_solved:
-            self.E_tracked_vals = [[] for k in range(K)]
-            self.E_tracked_vals_aggr = []
-            self.Q_asym_vals = [[] for k in range(K)]
-            self.Q_asym_vals_aggr = []
-            self.Q_sym_vals = [[] for k in range(K)]
-            self.Q_sym_vals_aggr = []
-            self.Q_sev_vals = [[] for k in range(K)]
-            self.Q_sev_vals_aggr = []
-
-        # Extract and separate results
-        for entry in results:
-            assert(len(entry) == 2) # entry is of type [t, x]
-            self.t_vals.append(entry[0])
-            x = entry[1]
-            if self.tracing_model_solved:
-                assert(len(x) == 11 * K)
-            else:
-                assert(len(x) == 7 * K)
-            idx = 0
-
-            aggregated = 0.0
-            for k in range(K):
-                assert(x[idx] >= 0.0)
-                assert(x[idx] <= 1.0)
-                self.S_vals[k].append(x[idx])
-                aggregated += x[idx]
-                idx += 1
-            self.S_vals_aggr.append(aggregated)
-
-            aggregated = 0.0
-            for k in range(K):
-                assert(x[idx] >= 0.0)
-                assert(x[idx] <= 1.0)
-                self.E_vals[k].append(x[idx])
-                aggregated += x[idx]
-                idx += 1
-            self.E_vals_aggr.append(aggregated)
-
-            if self.tracing_model_solved:
-                aggregated = 0.0
-                for k in range(K):
-                    assert(x[idx] >= 0.0)
-                    assert(x[idx] <= 1.0)
-                    self.E_tracked_vals[k].append(x[idx])
-                    aggregated += x[idx]
-                    idx += 1
-                self.E_tracked_vals_aggr.append(aggregated)
-
-            aggregated = 0.0
-            for k in range(K):
-                assert(x[idx] >= 0.0)
-                assert(x[idx] <= 1.0)
-                self.I_asym_vals[k].append(x[idx])
-                aggregated += x[idx]
-                idx += 1
-            self.I_asym_vals_aggr.append(aggregated)
-
-            aggregated = 0.0
-            for k in range(K):
-                assert(x[idx] >= 0.0)
-                assert(x[idx] <= 1.0)
-                self.I_sym_vals[k].append(x[idx])
-                aggregated += x[idx]
-                idx += 1
-            self.I_sym_vals_aggr.append(aggregated)
-
-            aggregated = 0.0
-            for k in range(K):
-                assert(x[idx] >= 0.0)
-                assert(x[idx] <= 1.0)
-                self.I_sev_vals[k].append(x[idx])
-                aggregated += x[idx]
-                idx += 1
-            self.I_sev_vals_aggr.append(aggregated)
-
-            if self.tracing_model_solved:
-                aggregated = 0.0
-                for k in range(K):
-                    assert(x[idx] >= 0.0)
-                    assert(x[idx] <= 1.0)
-                    self.Q_asym_vals[k].append(x[idx])
-                    aggregated += x[idx]
-                    idx += 1
-                self.Q_asym_vals_aggr.append(aggregated)
-
-                aggregated = 0.0
-                for k in range(K):
-                    assert(x[idx] >= 0.0)
-                    assert(x[idx] <= 1.0)
-                    self.Q_sym_vals[k].append(x[idx])
-                    aggregated += x[idx]
-                    idx += 1
-                self.Q_sym_vals_aggr.append(aggregated)
-
-                aggregated = 0.0
-                for k in range(K):
-                    assert(x[idx] >= 0.0)
-                    assert(x[idx] <= 1.0)
-                    self.Q_sev_vals[k].append(x[idx])
-                    aggregated += x[idx]
-                    idx += 1
-                self.Q_sev_vals_aggr.append(aggregated)
-
-            aggregated = 0.0
-            for k in range(K):
-                assert(x[idx] >= 0.0)
-                assert(x[idx] <= 1.0)
-                self.R_vals[k].append(x[idx])
-                aggregated += x[idx]
-                idx += 1
-            self.R_vals_aggr.append(aggregated)
-
-            aggregated = 0.0
-            for k in range(K):
-                assert(x[idx] >= 0.0)
-                assert(x[idx] <= 1.0)
-                self.D_vals[k].append(x[idx])
-                aggregated += x[idx]
-                idx += 1
-            self.D_vals_aggr.append(aggregated)
-
-            # Sanity checks
-            if self.tracing_model_solved:
-                assert(idx == 11 * K)
-            else:
-                assert(idx == 7 * K)
-
-        # Sanity checks
-        assert(len(self.t_vals) == len(self.S_vals_aggr))
-        assert(len(self.t_vals) == len(self.E_vals_aggr))
-        assert(len(self.t_vals) == len(self.I_asym_vals_aggr))
-        assert(len(self.t_vals) == len(self.I_sym_vals_aggr))
-        assert(len(self.t_vals) == len(self.I_sev_vals_aggr))
-        assert(len(self.t_vals) == len(self.R_vals_aggr))
-        assert(len(self.t_vals) == len(self.D_vals_aggr))
-        if self.tracing_model_solved:
-            assert(len(self.t_vals) == len(self.E_tracked_vals_aggr))
-            assert(len(self.t_vals) == len(self.Q_asym_vals_aggr))
-            assert(len(self.t_vals) == len(self.Q_sym_vals_aggr))
-            assert(len(self.t_vals) == len(self.Q_sev_vals_aggr))
-        for k in range(K):
-            assert(len(self.t_vals) == len(self.S_vals[k]))
-            assert(len(self.t_vals) == len(self.E_vals[k]))
-            assert(len(self.t_vals) == len(self.I_asym_vals[k]))
-            assert(len(self.t_vals) == len(self.I_sym_vals[k]))
-            assert(len(self.t_vals) == len(self.I_sev_vals[k]))
-            assert(len(self.t_vals) == len(self.R_vals[k]))
-            assert(len(self.t_vals) == len(self.D_vals[k]))
-            if self.tracing_model_solved:
-                assert(len(self.t_vals) == len(self.E_tracked_vals[k]))
-                assert(len(self.t_vals) == len(self.Q_asym_vals[k]))
-                assert(len(self.t_vals) == len(self.Q_sym_vals[k]))
-                assert(len(self.t_vals) == len(self.Q_sev_vals[k]))
-
-        # Compute total number of severe cases
-        self.sev_total_vals = []
-        for index, t in enumerate(self.t_vals):
-            sev_total_at_t = 0.0
-            for k in range(self.K):
-                assert(len(self.t_vals) == len(self.I_sev_vals[k]))
-                val = self.I_sev_vals[k][index]
-                assert(val >= 0.0)
-                assert(val <= 1.0)
-                sev_total_at_t += val
-                if self.tracing_model_solved:
-                    assert(len(self.t_vals) == len(self.Q_sev_vals[k]))
-                    val = self.Q_sev_vals[k][index]
-                    assert(val >= 0.0)
-                    assert(val <= 1.0)
-                    sev_total_at_t += val
-            self.sev_total_vals.append(sev_total_at_t)
-
-        # Sanity checks
-        assert(len(self.sev_total_vals) == len(self.t_vals))
-        assert(len(self.t_vals) == len(self.I_sev_vals[k]))
+            self.E_tracked_vals = self.result_dict["E_tracked_vals"]
+            self.E_tracked_vals_aggr = self._aggregate_over_groups(self.E_tracked_vals)
+            self.Q_asym_vals = self.result_dict["Q_asym_vals"]
+            self.Q_asym_vals_aggr = self._aggregate_over_groups(self.Q_asym_vals)
+            self.Q_sym_vals = self.result_dict["Q_sym_vals"]
+            self.Q_sym_vals_aggr = self._aggregate_over_groups(self.Q_sym_vals)
+            self.Q_sev_vals = self.result_dict["Q_sev_vals"]
+            self.Q_sev_vals_aggr = self._aggregate_over_groups(self.Q_sev_vals)
 
     def plot_all_curves(self):
         figure, axes = plot.subplots()
         figure.subplots_adjust(bottom = 0.15, left=0.15)
         axes.grid(linestyle = ':', linewidth = 0.5, color = "#808080")
         axes.set_xlabel("Days", fontsize=14)
-        axes.set_ylabel("Share of Individuals", fontsize=14)
+        axes.set_ylabel("Individuals", fontsize=14)
         axes.tick_params(axis='both', which='major', labelsize=14)
 
         group_linestyles = {0: "solid", 1: "dotted"} # well, yes, that's hard-coded for K = 2
@@ -276,7 +110,7 @@ class Visualizer:
         sev_total_plot.set_label("sev_total")
 
         # Plot horizontal lines for beds
-        beds_plot = axes.hlines(float(self.beds / self.N_total), self.t_start, self.t_end,
+        beds_plot = axes.hlines(float(self.beds), self.t_start, self.t_end,
                                 color = "cornflowerblue", linestyle = "dashed")
         beds_plot.set_label("beds")
 
@@ -285,10 +119,10 @@ class Visualizer:
         axes.set_position([box.x0, box.y0, box.width * 0.8, box.height])
         axes.legend(loc='center left', bbox_to_anchor=(1, 0.5))
         plot.savefig(self.filename + "_full.pdf")
-        ymax = 0.2
+        ymax = 0.2 * self.N_total
         axes.set_ylim([-ymax * 0.05, ymax])
         plot.savefig(self.filename + "_small.pdf")
-        ymax = 0.005
+        ymax = 0.005 * self.N_total
         axes.set_ylim([-ymax * 0.05, ymax])
         plot.savefig(self.filename + "_super_small.pdf")
         plot.close("all")
@@ -298,7 +132,7 @@ class Visualizer:
         figure.subplots_adjust(bottom = 0.15)
         axes.grid(linestyle = ':', linewidth = 0.5, color = "#808080")
         axes.set_xlabel("Days", fontsize=14)
-        axes.set_ylabel("Share of Individuals", fontsize=14)
+        axes.set_ylabel("Individuals", fontsize=14)
         axes.tick_params(axis='both', which='major', labelsize=14)
 
         S_plot, = axes.plot(self.t_vals, self.S_vals_aggr)
@@ -336,29 +170,31 @@ class Visualizer:
         D_plot, = axes.plot(self.t_vals, self.D_vals_aggr, color = "firebrick")
         D_plot.set_label("D")
 
-        # todo
-        # sev_total_plot, = axes.plot(self.t_vals, self.sev_total_vals, color = "chocolate", linestyle = "dashed")
-        # sev_total_plot.set_label("sev_total")
+        sev_total_plot, = axes.plot(self.t_vals, self.sev_total_vals, color = "chocolate", linestyle = "dashed")
+        sev_total_plot.set_label("sev_total")
 
         # Plot horizontal lines for beds
-        # beds_plot = axes.hlines(float(self.beds / self.N_total), self.t_start, self.t_end,
-        #                         color = "cornflowerblue", linestyle = "dashed")
-        # beds_plot.set_label("beds")
+        beds_plot = axes.hlines(float(self.beds), self.t_start, self.t_end,
+                                color = "cornflowerblue", linestyle = "dashed")
+        beds_plot.set_label("beds")
 
         # Shrink current axis by 20%
         box = axes.get_position()
         axes.set_position([box.x0, box.y0, box.width * 0.8, box.height])
-        ###axes.legend(loc='center left', bbox_to_anchor=(1, 0.5))
         plot.savefig(self.filename + "_full.pdf")
-        ymax = 0.2
+        ymax = 0.2 * self.N_total
         axes.set_ylim([-ymax * 0.05, ymax])
         plot.savefig(self.filename + "_small.pdf")
-        ymax = 0.005
+        ymax = 0.005 * self.N_total
         axes.set_ylim([-ymax * 0.05, ymax])
         plot.savefig(self.filename + "_super_small.pdf")
         plot.close("all")
 
     def paper_plot_figure_1(self):
+        """
+        Attention: This method contains code that is hard-coded for K=2
+        """
+
         figure, axes = plot.subplots()
         figure.subplots_adjust(bottom = 0.15, left=0.15)
         axes.grid(linestyle = ':', linewidth = 0.5, color = "#808080")
@@ -370,20 +206,20 @@ class Visualizer:
         group_linestyles = {0: "solid", 1: "dotted"} # well, yes, that's hard-coded for K = 2
 
         # hard-coded for K = 2
-        I_0_aggr_vals = [self.N_total * (x + y + z) for x, y, z in zip(self.I_asym_vals[0], self.I_sym_vals[0], self.I_sev_vals[0])]
+        I_0_aggr_vals = [(x + y + z) for x, y, z in zip(self.I_asym_vals[0], self.I_sym_vals[0], self.I_sev_vals[0])]
         I_0_aggr_plot, = axes.plot(self.t_vals, I_0_aggr_vals, color = "tab:orange", linewidth=3.5, linestyle = group_linestyles[0])
 
         # hard-coded for K = 2
-        I_1_aggr_vals = [self.N_total * (x + y + z) for x, y, z in zip(self.I_asym_vals[1], self.I_sym_vals[1], self.I_sev_vals[1])]
+        I_1_aggr_vals = [(x + y + z) for x, y, z in zip(self.I_asym_vals[1], self.I_sym_vals[1], self.I_sev_vals[1])]
         I_1_aggr_plot, = axes.plot(self.t_vals, I_1_aggr_vals, color = "tab:orange", linewidth=3.5, linestyle = group_linestyles[1])
 
         for k in range(self.K):
-            S_vals_k_abs = [self.N_total * self.S_vals[k][t] for t in range(len(self.S_vals[k]))]
+            S_vals_k_abs = [self.S_vals[k][t] for t in range(len(self.S_vals[k]))]
             S_plot, = axes.plot(self.t_vals, S_vals_k_abs,
                                 color = "tab:green", linewidth=3.5, linestyle = group_linestyles[k])
             #S_plot.set_label("S_" + str(k))
 
-            R_vals_k_abs = [self.N_total * self.R_vals[k][t] for t in range(len(self.R_vals[k]))]
+            R_vals_k_abs = [self.R_vals[k][t] for t in range(len(self.R_vals[k]))]
             R_plot, = axes.plot(self.t_vals, R_vals_k_abs,
                                 color = "tab:blue", linewidth=3.5, linestyle = group_linestyles[k])
             #R_plot.set_label("R_" + str(k))
@@ -412,22 +248,22 @@ class Visualizer:
 
         for k in range(self.K):
 
-            I_and_Q_sym_total_vals_k = [self.N_total * (x + y) for x, y in zip(self.I_sym_vals[k], self.Q_sym_vals[k])]
+            I_and_Q_sym_total_vals_k = [(x + y) for x, y in zip(self.I_sym_vals[k], self.Q_sym_vals[k])]
             I_and_Q_sym_total_plot, = axes.plot(self.t_vals, I_and_Q_sym_total_vals_k,
                                                 color = "tab:blue", linewidth=3.5, linestyle = group_linestyles[k])
 
-            I_and_Q_asym_total_vals_k = [self.N_total * (x + y) for x, y in zip(self.I_asym_vals[k], self.Q_asym_vals[k])]
+            I_and_Q_asym_total_vals_k = [(x + y) for x, y in zip(self.I_asym_vals[k], self.Q_asym_vals[k])]
             I_and_Q_asym_total_plot, = axes.plot(self.t_vals, I_and_Q_asym_total_vals_k,
                                                  color = "tab:green", linewidth=3.5, linestyle = group_linestyles[k])
 
-            I_and_Q_sev_total_vals_k = [self.N_total * (x + y) for x, y in zip(self.I_sev_vals[k], self.Q_sev_vals[k])]
+            I_and_Q_sev_total_vals_k = [(x + y) for x, y in zip(self.I_sev_vals[k], self.Q_sev_vals[k])]
             I_and_Q_sev_total_plot, = axes.plot(self.t_vals, I_and_Q_sev_total_vals_k,
                                                 color = "tab:purple", linewidth=3.5, linestyle = group_linestyles[k])
 
-            D_total_vals_k = [self.N_total * x for x in self.D_vals[k]]
+            D_total_vals_k = [x for x in self.D_vals[k]]
             D_plot, = axes.plot(self.t_vals, D_total_vals_k, color = "tab:red", linewidth=3.5, linestyle = group_linestyles[k])
 
-        I_and_Q_sev_total_vals = [self.N_total * (a + b + c + d) for a, b, c, d in zip(self.I_sev_vals[0],
+        I_and_Q_sev_total_vals = [(a + b + c + d) for a, b, c, d in zip(self.I_sev_vals[0],
                                                                                        self.I_sev_vals[1],
                                                                                        self.Q_sev_vals[0],
                                                                                        self.Q_sev_vals[1])]
@@ -464,14 +300,14 @@ class Visualizer:
 
         for k in range(self.K):
 
-            I_and_Q_sev_total_vals_k = [self.N_total * (x + y) for x, y in zip(self.I_sev_vals[k], self.Q_sev_vals[k])]
+            I_and_Q_sev_total_vals_k = [(x + y) for x, y in zip(self.I_sev_vals[k], self.Q_sev_vals[k])]
             I_and_Q_sev_total_plot, = axes.plot(self.t_vals, I_and_Q_sev_total_vals_k,
                                                 color = "tab:purple", linewidth=3.5, linestyle = group_linestyles[k])
 
-            D_total_vals_k = [self.N_total * x for x in self.D_vals[k]]
+            D_total_vals_k = [x for x in self.D_vals[k]]
             D_plot, = axes.plot(self.t_vals, D_total_vals_k, color = "tab:red", linewidth=3.5, linestyle = group_linestyles[k])
 
-        I_and_Q_sev_total_vals = [self.N_total * (a + b + c + d) for a, b, c, d in zip(self.I_sev_vals[0],
+        I_and_Q_sev_total_vals = [(a + b + c + d) for a, b, c, d in zip(self.I_sev_vals[0],
                                                                                        self.I_sev_vals[1],
                                                                                        self.Q_sev_vals[0],
                                                                                        self.Q_sev_vals[1])]
@@ -492,5 +328,16 @@ class Visualizer:
         axes.set_ylim([-ymax * 0.05, ymax])
         plot.savefig(self.filename + "_figure_4.pdf")
         plot.close("all")
+
+    def _aggregate_over_groups(self, list_of_lists):
+        assert(len(list_of_lists) == self.K)
+        aggregated_list = []
+        for time_idx in range(len(self.t_vals)):
+            aggregated_value = 0
+            for group_idx in range(self.K):
+                aggregated_value += list_of_lists[group_idx][time_idx]
+            aggregated_list.append(aggregated_value)
+        assert(len(self.t_vals) == len(aggregated_list))
+        return aggregated_list
 
 # class Visualizer
