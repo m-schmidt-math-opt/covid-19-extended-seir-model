@@ -22,7 +22,8 @@ class SEIIIRD_Tracing_Model:
         self.psi = packed_parameters[13]
         self.beds = packed_parameters[14]
 
-        self.numerical_tolerance = 1e-6 # todo was 1e-12 before
+        self.numerical_tolerance_fine = 1e-12
+        self.numerical_tolerance_coarse = 1e-6
 
     def eval_rhs(self, x):
         S = x[0 : self.K]
@@ -39,7 +40,7 @@ class SEIIIRD_Tracing_Model:
 
         # Sanity checks
         assert(x.shape[0] == 11 * self.K)
-        # assert(abs(sum(x) - self.N_total) < self.numerical_tolerance) # todo
+        assert(abs(sum(x) - self.N_total) < self.numerical_tolerance_coarse)
         assert(len(S) == self.K)
         assert(len(E) == self.K)
         assert(len(E_tracked) == self.K)
@@ -180,7 +181,7 @@ class SEIIIRD_Tracing_Model:
 
         # Sanity checks
         assert(idx == 11 * self.K)
-        assert(abs(overall_rhs) < self.numerical_tolerance)
+        assert(abs(overall_rhs) < self.numerical_tolerance_fine)
 
         return f_vec
 
