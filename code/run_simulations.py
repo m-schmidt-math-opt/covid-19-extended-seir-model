@@ -64,9 +64,9 @@ for file in os.listdir(data_directory):
         visualizer = Visualizer(tracing_data_given, result_dict, N, K, beds, t_start, t_end,
                                 "../results/" + data_set_name + "/" + data_filename_prefix)
 
-        #visualizer.plot_all_curves()
+        visualizer.plot_all_curves()
         visualizer.plot_aggregated_curves()
-        #visualizer.paper_plot_figure_1()
-        #if tracing_data_given:
-            #visualizer.paper_plot_figure_3()
-            #visualizer.paper_plot_figure_4()
+        visualizer.paper_plot_figure_1()
+        if tracing_data_given:
+            visualizer.paper_plot_figure_3()
+            visualizer.paper_plot_figure_4()
