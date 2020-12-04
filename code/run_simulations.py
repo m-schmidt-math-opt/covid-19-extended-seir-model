@@ -14,11 +14,11 @@ from visualizer import Visualizer
 # Start and end time, stepsize
 t_start = 0
 t_end = 500
-stepsize = 1e-1
+stepsize = 1e-2
 
 # Preparing data parsing
-data_set_name = "corrected-data-for-submitted-paper"
-data_directory_name = "../new-data/" + data_set_name + "/"
+data_set_name = "scenarios-underlying-figure-4"
+data_directory_name = "../data/" + data_set_name + "/"
 data_directory = os.fsencode(data_directory_name)
 
 for file in os.listdir(data_directory):

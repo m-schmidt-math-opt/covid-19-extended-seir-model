@@ -22,8 +22,8 @@ class SEIIIRD_Tracing_Model:
         self.psi = packed_parameters[13]
         self.beds = packed_parameters[14]
 
-        self.numerical_tolerance_fine = 1e-6 # todo
-        self.numerical_tolerance_coarse = 1e-6
+        self.numerical_tolerance_fine = 1e-4 # todo
+        self.numerical_tolerance_coarse = 1e-4
 
     def eval_rhs(self, x):
         S = x[0 : self.K]
