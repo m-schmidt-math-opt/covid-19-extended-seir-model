@@ -54,8 +54,12 @@ for file in os.listdir(data_directory):
         print("Required CPU time = " + str(round(end_time - start_time, 3)) + " seconds")
 
         # Analyze results
-        result_analyzer = Result_Analyzer(tracing_data_given, results, stepsize, N, K, beds, t_start, t_end,
-                                          "../results/" + data_set_name + "/" + data_filename_prefix)
+        path = "../results/" + data_set_name + "/"
+        if not os.path.exists(path):
+            os.makedirs(path)
+        result_analyzer = Result_Analyzer(tracing_data_given, results, stepsize,
+                                          N, K, beds, t_start, t_end,
+                                          path + data_filename_prefix)
         result_analyzer.extract_results()
         result_dict = result_analyzer.get_extracted_results_as_dict()
         result_analyzer.compute_and_write_results()
