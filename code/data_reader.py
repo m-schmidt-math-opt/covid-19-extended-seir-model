@@ -8,11 +8,11 @@ class Data_Reader:
     def read_from_csv_file(self, filename):
         print("Parse data from CSV file " + filename + " ...")
 
-        with open(filename) as csv_file:
+        with open(filename, encoding='utf-8-sig') as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=";")
             nr_of_given_tracing_data = 0
             for row in csv_reader:
-                if row[0] == "\ufeffN_total": # What the heck?!
+                if row[0] == "N_total":
                     N_total = int(float(row[1].replace(",", ".")))
                     assert(N_total > 0)
                 elif row[0] == "K":
